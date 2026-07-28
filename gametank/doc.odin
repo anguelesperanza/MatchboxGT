@@ -56,6 +56,7 @@ File layout of this package:
   - tilemap.odin    draw_tilemap (a screen-sized grid) + draw_tilemap_view (scroll
                     a window over a larger map) of 16x16 tiles from a byte map
   - menu.odin       menu_navigate / menu_cursor / if_chosen: a cursor over a list
+  - parallax.odin   layer_scroll / draw_layer: scrolling background layers (parallax)
   - rom.odin        Config + build_rom + .gtr layout/output (+ INFLATE bundling)
   - assets/         bundled INFLATE routine + ACP program + pitch table (#loaded)
 

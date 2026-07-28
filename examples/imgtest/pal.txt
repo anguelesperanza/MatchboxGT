@@ -1,0 +1,3 @@
+# RRGGBB  GameTank-byte
+d2a028 3c
+ffffff 07

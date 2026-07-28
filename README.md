@@ -315,6 +315,15 @@ This is the layer that lets you write game *logic* without hand-writing 6502.
   zero runtime cost — reach for these helpers only when the *game* must branch on a
   value that isn't known until it runs.
 
+### Parallax layers — `parallax.odin`
+Scrolling background layers for depth (endless runners, side-scrollers). A layer is
+a **128-wide, seamless** repeating strip in sprite RAM at row `src_gy`. Give each
+layer an `offset` Var; `layer_scroll(p, offset, speed)` advances it (wraps at 128),
+and `draw_layer(p, src_gy, screen_y, height, offset)` blits it (as two partial blits
+covering the wrap, with transparency). Draw layers **back-to-front** and advance
+them at **different speeds** — that speed difference is the parallax. See
+`examples/runner`.
+
 ### Menus — `menu.odin`
 A menu is a `cursor` Var (the selected row) plus rows you draw yourself.
 `menu_navigate(p, cursor, count, pressed)` moves it up/down with the D-pad (one
@@ -388,19 +397,33 @@ cells within that image (frame *N* of a 16px strip sits at sheet X = `N*16`).
 
 **Two steps: build the raw bytes, then deflate them.**
 
-1. **Author the image as raw color bytes.** Produce the 16384-byte array however
-   suits you — draw shapes in code, or map an indexed image's palette to GameTank
-   color bytes. Worked example: [`examples/anim/make_coin.ps1`](examples/anim/make_coin.ps1)
-   draws a 4-frame spinning coin (ellipses in gold `0x3C`) and writes the asset.
-2. **Deflate to `.gtg.deflate`.** Any standard DEFLATE encoder works — the format
-   is plain RFC 1951 with no zlib header. The repo ships a helper:
+**From an image file** (draw in any editor) — [`tools/png_to_sheet.ps1`](tools/png_to_sheet.ps1)
+converts a PNG/BMP straight to `.gtg.deflate`. Lay your sprites/tiles/glyphs out in
+one image at the grid positions your code reads; fully-transparent pixels become
+GameTank color 0. Two modes:
+
+```bash
+# exact: you supply an "RRGGBB HH" palette (RGB -> GameTank byte) — best for real art
+pwsh tools/png_to_sheet.ps1 art.png sheet.gtg.deflate -Palette pal.txt
+# approximate: auto-map each pixel to the nearest GameTank color — quick prototyping
+pwsh tools/png_to_sheet.ps1 art.png sheet.gtg.deflate -Quantize
+```
+
+Run `examples/palette` to see the real on-screen 256-color palette (a 16×16 grid of
+`row*16+col` bytes) and pick the bytes for your exact palette. `examples/imgtest`
+is a full worked example (PNG → convert → load → draw).
+
+**From code**, if you'd rather generate art programmatically, it's two steps:
+
+1. **Author the image as raw color bytes** — the 16384-byte array. Worked example:
+   [`examples/anim/make_coin.ps1`](examples/anim/make_coin.ps1) draws a 4-frame
+   spinning coin (ellipses in gold `0x3C`).
+2. **Deflate to `.gtg.deflate`** with [`tools/deflate.ps1`](tools/deflate.ps1) (any
+   standard DEFLATE encoder works — plain RFC 1951, no zlib header):
 
    ```bash
-   pwsh tools/deflate.ps1 my_sheet.bin examples/mygame/sheet.gtg.deflate
+   pwsh tools/deflate.ps1 my_sheet.bin sheet.gtg.deflate
    ```
-
-   (or inline in PowerShell: `System.IO.Compression.DeflateStream` at
-   `CompressionLevel.Optimal` over your byte array.)
 
 **Use it in a ROM:** `blob_file(p, "sheet", "path/sheet.gtg.deflate")` →
 `inflate_asset(p, "sheet")` in `setup` (needs `Config.inflate = true`, and it must
@@ -431,6 +454,9 @@ Run each from the repo root with `odin run examples/<name>`; each writes a
 | `tilemap` | a walled room drawn from a byte map with `draw_tilemap`, plus a hero you walk around inside it (`make_tiles.ps1`) |
 | `menu`    | a four-option menu with a ">" cursor, D-pad navigation, and A to confirm (`menu_navigate`/`menu_cursor`/`if_chosen`) |
 | `scroll`  | a scrolling tilemap — an 8×6 window you scroll over a larger 12×10 map with the D-pad (`draw_tilemap_view`) |
+| `palette` | fills the screen with all 256 GameTank colors — a reference for picking color bytes |
+| `imgtest` | loads a sprite converted from a PNG by `tools/png_to_sheet.ps1` (the image-import workflow) |
+| `runner`  | parallax endless-runner base — 3 background layers scrolling at different speeds, plus a running, jumping character (`layer_scroll`/`draw_layer`) |
 
 ---
 
