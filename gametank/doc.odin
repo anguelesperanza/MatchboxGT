@@ -37,8 +37,9 @@ File layout of this package:
   - blitter.odin    colorfill + sprite blits, clear_screen, sprite-RAM counter reset
   - input.odin      Genesis-pad reading + PAD_* masks; if_pressed (held) and
                     poll_gamepad + if_held / if_just_pressed (edge-triggered)
-  - font.odin       draw_text (a string) + draw_number / draw_number16 (a Var /
-                    Var16's decimal value) + draw_glyph (one digit) from a grid
+  - font.odin       draw_text (build-time string) + draw_string / string_blob
+                    (runtime, data-driven text) + draw_number / draw_number16 +
+                    draw_glyph, from an 8x8 glyph grid
   - asset.odin      inflate_asset/inflate_raw: decompress blobs into sprite/RAM
   - audio.odin      4-voice square mixer (self-assembled ACP program): audio_init,
                     voice_note / voice_off / audio_note (voice 0) / audio_silence

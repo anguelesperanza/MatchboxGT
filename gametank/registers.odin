@@ -102,3 +102,5 @@ GT_NUM_TMP :: u8(0x09) // draw_number16: tentative 16-bit subtraction low byte
 GT_NUM_DIG :: u8(0x0A) // number routines: the current decimal digit (fed to draw_glyph)
 GT_RNG     :: u8(0x0B) // random.odin: the global RNG state (an 8-bit LFSR)
 GT_FRAME   :: u8(0x0C) // timer.odin: free-running frame counter (build_game bumps it)
+GT_TEXT_PTR :: u8(0x0D) // draw_string: $0D/$0E = pointer to the current string
+GT_TEXT_X   :: u8(0x0F) // draw_string: the running cursor X

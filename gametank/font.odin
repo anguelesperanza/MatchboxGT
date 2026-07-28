@@ -152,3 +152,67 @@ draw_text :: proc(p: ^Program, x, y: u8, text: string, font_gy: u8) {
 		cx += 8
 	}
 }
+
+// -----------------------------------------------------------------------------
+// Runtime strings: draw text stored in memory (a ROM blob or RAM), decided at run
+// time rather than baked in at build time. This is what data-driven text needs —
+// dialogue tables, item/monster names, messages chosen by the game. Strings are
+// stored as glyph indices (one byte each) with a space marker and a terminator, so
+// the draw loop is just "read a byte, blit its glyph". Same charset as draw_text.
+// -----------------------------------------------------------------------------
+
+@(private) TEXT_SPACE :: u8(0xFE) // advance the cursor without drawing
+@(private) TEXT_END   :: u8(0xFF) // end of string
+
+// Encode `text` into a drawable string blob (glyph indices + terminator) named
+// `name`, so draw_string can render it from blob_addr(p, name). Charset is the
+// same as draw_text (0-9, A-Z); anything else becomes a space.
+string_blob :: proc(p: ^Program, name: string, text: string) {
+	data := make([dynamic]u8)
+	for c in text {
+		if idx, ok := glyph_index(c); ok {
+			append(&data, u8(idx))
+		} else {
+			append(&data, TEXT_SPACE)
+		}
+	}
+	append(&data, TEXT_END)
+	blob(p, name, data[:])
+}
+
+// Draw a terminated string from `addr` (a string_blob, or any RAM/ROM bytes in the
+// same glyph-index encoding) as 8x8 glyphs starting at (x, y). Unlike draw_text
+// this is a real runtime loop, so the string's content and length can change while
+// the game runs. Clobbers A, Y, and the text scratch (GT_TEXT_PTR/GT_TEXT_X, GT_TMP).
+draw_string :: proc(p: ^Program, x, y: u8, addr: u16, font_gy: u8) {
+	emit_imm(p, .LDA, u8(addr));      emit_zp(p, .STA, GT_TEXT_PTR)
+	emit_imm(p, .LDA, u8(addr >> 8)); emit_zp(p, .STA, GT_TEXT_PTR + 1)
+	emit_imm(p, .LDA, x);             emit_zp(p, .STA, GT_TEXT_X)
+	emit_imm(p, .LDY, 0)
+
+	loop := anon(p)
+	emit_ind_y(p, .LDA, GT_TEXT_PTR)                 // A = next glyph byte
+	done := anon_fwd(p)
+	emit_imm(p, .CMP, TEXT_END);   emit_branch_id(p, .BEQ, done)
+	space := anon_fwd(p)
+	emit_imm(p, .CMP, TEXT_SPACE); emit_branch_id(p, .BEQ, space)
+
+	// blit the 8x8 glyph for index A: source (gx, gy) = ((idx%16)*8, font_gy+(idx/16)*8)
+	emit_zp(p, .STA, GT_TMP)                         // save the index (blit clobbers A)
+	blit_begin(p, DMA_GCARRY)                        // transparency on; leaves Y and text scratch alone
+	emit_zp(p, .LDA, GT_TEXT_X); emit_abs(p, .STA, BLIT_VX)
+	emit_imm(p, .LDA, y);        emit_abs(p, .STA, BLIT_VY)
+	emit_zp(p, .LDA, GT_TMP); emit_imm(p, .AND, 0x0F); emit_acc(p, .ASL); emit_acc(p, .ASL); emit_acc(p, .ASL)
+	emit_abs(p, .STA, BLIT_GX)                       // gx = (idx & 15) * 8
+	emit_zp(p, .LDA, GT_TMP); emit_imm(p, .AND, 0xF0); emit_acc(p, .LSR); emit_impl(p, .CLC); emit_imm(p, .ADC, font_gy)
+	emit_abs(p, .STA, BLIT_GY)                       // gy = font_gy + (idx >> 4) * 8
+	emit_imm(p, .LDA, 8); emit_abs(p, .STA, BLIT_WIDTH); emit_abs(p, .STA, BLIT_HEIGHT)
+	blit_go(p)
+	blit_end(p)
+
+	put_label(p, space)
+	emit_zp(p, .LDA, GT_TEXT_X); emit_impl(p, .CLC); emit_imm(p, .ADC, 8); emit_zp(p, .STA, GT_TEXT_X)
+	emit_impl(p, .INY)
+	emit_jump_id(p, loop)
+	put_label(p, done)
+}
