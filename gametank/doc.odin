@@ -53,7 +53,8 @@ File layout of this package:
                     conditionals (if_eq/if_lt/... + otherwise)
   - random.odin     global LFSR RNG: random_seed / random / random_var / random_into
   - timer.odin      frame counter (frame_var) + countdown tick + every_n_frames
-  - tilemap.odin    draw_tilemap: render a grid of 16x16 tiles from a byte map
+  - tilemap.odin    draw_tilemap (a screen-sized grid) + draw_tilemap_view (scroll
+                    a window over a larger map) of 16x16 tiles from a byte map
   - menu.odin       menu_navigate / menu_cursor / if_chosen: a cursor over a list
   - rom.odin        Config + build_rom + .gtr layout/output (+ INFLATE bundling)
   - assets/         bundled INFLATE routine + ACP program + pitch table (#loaded)

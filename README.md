@@ -1,4 +1,4 @@
-# gametank — build GameTank ROMs in Odin
+# MatchboxGT — build GameTank ROMs in Odin
 
 A build-time framework for making [GameTank](https://gametank.zone) console ROMs in
 Odin, backed by `core:rexcode/isa/mos6502`. You write an Odin program that
@@ -334,6 +334,14 @@ up to 64 types). It redraws the whole grid, so call it each frame after the clea
 a single screen is a few dozen blits. Limits: `cols*rows ≤ 256`, `x + cols*16 ≤
 255` (a 128px screen holds 8 columns). See `examples/tilemap`.
 
+For **scrolling**, `draw_tilemap_view(p, addr, map_cols, view_cols, view_rows,
+cam_x, cam_y, x, y, tile_gy)` shows a `view_cols`×`view_rows` window onto a bigger
+`map_cols`-wide map, with the tile at map cell `(cam_x, cam_y)` in the top-left.
+`cam_x`/`cam_y` are **Vars in tile units** — this is tile-aligned scrolling (the
+view moves a whole tile per step, ideal for grid games). Clamp them to
+`[0, map_cols-view_cols]` / `[0, map_rows-view_rows]` yourself (e.g. `move_dec`/
+`move_inc` gated with `every_n_frames`). See `examples/scroll`.
+
 ### Timing — `timer.odin`
 `build_game` bumps a free-running frame counter each frame. `frame_var()` returns
 it as a Var (test with `if_*`, or blink via `if_held(p, frame_var(), 0x10)`).
@@ -422,6 +430,7 @@ Run each from the repo root with `odin run examples/<name>`; each writes a
 | `text`    | runtime text — a dialogue box drawn from ROM with `draw_string`, using a full upper/lowercase + punctuation font (`make_font.ps1`) |
 | `tilemap` | a walled room drawn from a byte map with `draw_tilemap`, plus a hero you walk around inside it (`make_tiles.ps1`) |
 | `menu`    | a four-option menu with a ">" cursor, D-pad navigation, and A to confirm (`menu_navigate`/`menu_cursor`/`if_chosen`) |
+| `scroll`  | a scrolling tilemap — an 8×6 window you scroll over a larger 12×10 map with the D-pad (`draw_tilemap_view`) |
 
 ---
 
