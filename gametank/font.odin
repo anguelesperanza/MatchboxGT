@@ -127,12 +127,36 @@ extract16 :: proc(p: ^Program, place: u16) {
 	put_label(p, done)
 }
 
-// Map a character to its font-grid index. '0'-'9' -> 0-9, 'A'-'Z' -> 10-35.
+// Map a character to its font-grid index, matching the layout the font sheets use:
+// 0-9 (0-9), A-Z (10-35), a-z (36-61), punctuation (62-79). The 0-35 range is the
+// original layout, so older uppercase-only sheets still work; lowercase and
+// punctuation need a sheet that has those glyphs (see examples/text/make_font.ps1).
 @(private)
 glyph_index :: proc(c: rune) -> (int, bool) {
 	switch {
-	case c >= '0' && c <= '9': return int(c - '0'), true
-	case c >= 'A' && c <= 'Z': return 10 + int(c - 'A'), true
+	case c >= '0' && c <= '9': return int(c - '0'), true       // 0-9
+	case c >= 'A' && c <= 'Z': return 10 + int(c - 'A'), true  // 10-35
+	case c >= 'a' && c <= 'z': return 36 + int(c - 'a'), true  // 36-61
+	}
+	switch c {                                                 // 62-79
+	case '.':  return 62, true
+	case ',':  return 63, true
+	case '!':  return 64, true
+	case '?':  return 65, true
+	case '\'': return 66, true
+	case ':':  return 67, true
+	case ';':  return 68, true
+	case '-':  return 69, true
+	case '(':  return 70, true
+	case ')':  return 71, true
+	case '/':  return 72, true
+	case '+':  return 73, true
+	case '=':  return 74, true
+	case '*':  return 75, true
+	case '%':  return 76, true
+	case '"':  return 77, true
+	case '<':  return 78, true
+	case '>':  return 79, true
 	}
 	return 0, false // space / unsupported: leave a gap
 }
