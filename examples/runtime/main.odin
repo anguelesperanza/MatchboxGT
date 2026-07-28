@@ -41,7 +41,6 @@ setup :: proc(p: ^gt.Program) {
 }
 
 frame :: proc(p: ^gt.Program) {
-	in8 := u8(input.addr)                       // this var lives in zero page
 
 	// Once every coin is collected, repaint the field green (the scaffold already
 	// cleared it to the background, so this just overrides it while won).
@@ -49,11 +48,11 @@ frame :: proc(p: ^gt.Program) {
 	gt.clear_screen(p, gt.color(gt.HUE_GREEN, gt.SAT_FULL, 3))
 	gt.put_label(p, won)
 
-	gt.read_gamepad1(p, in8)
-	gt.move_dec(p, in8, gt.PAD_UP,    gt.OBJ_Y + 0, 0)
-	gt.move_inc(p, in8, gt.PAD_DOWN,  gt.OBJ_Y + 0, MAX)
-	gt.move_dec(p, in8, gt.PAD_LEFT,  gt.OBJ_X + 0, 0)
-	gt.move_inc(p, in8, gt.PAD_RIGHT, gt.OBJ_X + 0, MAX)
+	gt.read_gamepad1(p, input)
+	gt.move_dec(p, input, gt.PAD_UP,    gt.OBJ_Y + 0, 0)
+	gt.move_inc(p, input, gt.PAD_DOWN,  gt.OBJ_Y + 0, MAX)
+	gt.move_dec(p, input, gt.PAD_LEFT,  gt.OBJ_X + 0, 0)
+	gt.move_inc(p, input, gt.PAD_RIGHT, gt.OBJ_X + 0, MAX)
 	gt.move_objects(p, 1 + COINS, MAX)          // integrate velocity + bounce (player v=0)
 	for coin in u8(1) ..= u8(COINS) {           // collect coins the player touches
 		hit := gt.if_overlap(p, 0, coin)
@@ -61,7 +60,7 @@ frame :: proc(p: ^gt.Program) {
 		gt.inc(p, collected)                    // count the pickup (fires once — coin is now hidden)
 		gt.put_label(p, hit)
 	}
-	gt.sound_while(p, in8, DIRS, 0, STEP, 60)   // footstep tone while moving
+	gt.sound_while(p, input, DIRS, 0, STEP, 60)   // footstep tone while moving
 	gt.draw_objects(p, 1 + COINS)
 	gt.draw_number(p, 8, 8, collected, FONT_GY, digits = 1) // live coin count, top-left
 }

@@ -15,7 +15,7 @@ package gametank
 // if_nonzero (still counting) / if_zero (elapsed).
 
 // The free-running frame counter as a Var (wraps every 256 frames). Only bumped
-// under build_game. Test it like any Var — e.g. blink with if_held(p, frame_var(),
+// under build_game. Test it like any Var — e.g. blink with if_pressed(p, frame_var(),
 // 0x10) — or display it with draw_number.
 frame_var :: proc() -> Var { return Var{addr = u16(GT_FRAME)} }
 

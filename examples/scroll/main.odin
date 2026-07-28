@@ -53,14 +53,13 @@ setup :: proc(p: ^gt.Program) {
 }
 
 frame :: proc(p: ^gt.Program) {
-	in8 := u8(input.addr)
-	gt.read_gamepad1(p, in8)
+	gt.read_gamepad1(p, input)
 	// move the camera one tile at a controlled rate while a direction is held
 	tick := gt.every_n_frames(p, timer, SPEED)
-	gt.move_dec(p, in8, gt.PAD_LEFT,  cam_x.addr, 0)
-	gt.move_inc(p, in8, gt.PAD_RIGHT, cam_x.addr, CAM_X_MAX)
-	gt.move_dec(p, in8, gt.PAD_UP,    cam_y.addr, 0)
-	gt.move_inc(p, in8, gt.PAD_DOWN,  cam_y.addr, CAM_Y_MAX)
+	gt.move_dec(p, input, gt.PAD_LEFT,  cam_x.addr, 0)
+	gt.move_inc(p, input, gt.PAD_RIGHT, cam_x.addr, CAM_X_MAX)
+	gt.move_dec(p, input, gt.PAD_UP,    cam_y.addr, 0)
+	gt.move_inc(p, input, gt.PAD_DOWN,  cam_y.addr, CAM_Y_MAX)
 	gt.put_label(p, tick)
 	gt.draw_tilemap_view(p, gt.blob_addr(p, "map"), MAP_COLS, VIEW_COLS, VIEW_ROWS, cam_x, cam_y, 0, 0, TILE_GY)
 }

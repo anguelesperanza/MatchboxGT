@@ -49,14 +49,13 @@ setup :: proc(p: ^gt.Program) {
 }
 
 frame :: proc(p: ^gt.Program) {
-	in8 := u8(held.addr)
 	gt.poll_gamepad1(p, held, pressed) // held = buttons down, pressed = just-pressed this frame
 	gt.random(p)                       // churn the RNG every frame so coins land unpredictably
 
-	gt.move_dec(p, in8, gt.PAD_UP,    gt.OBJ_Y + u16(PLAYER), 0)
-	gt.move_inc(p, in8, gt.PAD_DOWN,  gt.OBJ_Y + u16(PLAYER), POS_MAX)
-	gt.move_dec(p, in8, gt.PAD_LEFT,  gt.OBJ_X + u16(PLAYER), 0)
-	gt.move_inc(p, in8, gt.PAD_RIGHT, gt.OBJ_X + u16(PLAYER), POS_MAX)
+	gt.move_dec(p, held, gt.PAD_UP,    gt.OBJ_Y + u16(PLAYER), 0)
+	gt.move_inc(p, held, gt.PAD_DOWN,  gt.OBJ_Y + u16(PLAYER), POS_MAX)
+	gt.move_dec(p, held, gt.PAD_LEFT,  gt.OBJ_X + u16(PLAYER), 0)
+	gt.move_inc(p, held, gt.PAD_RIGHT, gt.OBJ_X + u16(PLAYER), POS_MAX)
 
 	// tap A to reroll the coin — edge-triggered, and rate-limited by a cooldown timer
 	gt.tick(p, cooldown)                       // count the cooldown down toward 0

@@ -38,13 +38,12 @@ setup :: proc(p: ^gt.Program) {
 }
 
 frame :: proc(p: ^gt.Program) {
-	in8 := u8(input.addr)
-	gt.read_gamepad1(p, in8)
+	gt.read_gamepad1(p, input)
 	// keep the 16x16 hero on the floor (inside the 1-tile wall border)
-	gt.move_dec(p, in8, gt.PAD_UP,    gt.OBJ_Y + 0, 16)
-	gt.move_inc(p, in8, gt.PAD_DOWN,  gt.OBJ_Y + 0, 64)
-	gt.move_dec(p, in8, gt.PAD_LEFT,  gt.OBJ_X + 0, 16)
-	gt.move_inc(p, in8, gt.PAD_RIGHT, gt.OBJ_X + 0, 96)
+	gt.move_dec(p, input, gt.PAD_UP,    gt.OBJ_Y + 0, 16)
+	gt.move_inc(p, input, gt.PAD_DOWN,  gt.OBJ_Y + 0, 64)
+	gt.move_dec(p, input, gt.PAD_LEFT,  gt.OBJ_X + 0, 16)
+	gt.move_inc(p, input, gt.PAD_RIGHT, gt.OBJ_X + 0, 96)
 
 	gt.draw_tilemap(p, gt.blob_addr(p, "room"), COLS, ROWS, 0, 0, 0)
 	gt.draw_objects(p, 1)

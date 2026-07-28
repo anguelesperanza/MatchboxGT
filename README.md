@@ -201,15 +201,16 @@ coordinates live in RAM). Max blit size is 127×127.
 
 ### Input — `input.odin`
 Buttons: `PAD_RIGHT, PAD_LEFT, PAD_DOWN, PAD_UP, PAD_B, PAD_C, PAD_A, PAD_START`.
+Input state lives in `Var`s (from `alloc_var`).
 
-- **Held (level):** `read_gamepad1(p, dest_zp)` / `read_gamepad2` fill a zero-page
-  byte with `PAD_*` flags (`1 = down`). `if_pressed(p, state_zp, mask) -> skip_id`
-  opens a guarded block, closed with `put_label`.
-- **Held + edges:** `poll_gamepad1(p, held, pressed)` (Vars) reads the pad into
-  `held` and also fills `pressed` with only the buttons that went down *this
-  frame*. Then `if_held(p, held, mask)` for held buttons and `if_just_pressed(p,
-  pressed, mask)` for taps (fires once per press) — both close with `put_label`.
-  Init `held` to `0` in setup; pass the same two Vars every frame.
+- **Held (level):** `read_gamepad1(p, input)` / `read_gamepad2` fill an input `Var`
+  with `PAD_*` flags (`1 = down`). `if_pressed(p, input, mask) -> skip_id` opens a
+  guarded block (runs while any masked button is held), closed with `put_label`.
+- **Held + edges:** `poll_gamepad1(p, held, pressed)` reads the pad into `held` and
+  also fills `pressed` with only the buttons that went down *this frame*. Then
+  `if_pressed(p, held, mask)` for held buttons and `if_just_pressed(p, pressed,
+  mask)` for taps (fires once per press). Init `held` to `0` in setup; pass the same
+  two Vars every frame.
 
 ### Color — `color.odin`
 Pixels are one byte `HHHSSBBB`. `color(hue, sat, bright)`, `gray(level)`,
@@ -262,9 +263,9 @@ Notes are MIDI numbers (bundled MIDI→rate table); keep the volume sum ≤ 255.
 - `build_game(cfg, Game{bg, audio, setup, frame})` — the double-buffered game loop
   + NMI. Set `audio = true` to start the ACP mixer at boot (calls `audio_init`),
   so `setup`/`frame` can use the audio API directly.
-- `move_dec` / `move_inc(p, input_zp, mask, addr, min/max)` — clamped movement of
-  a RAM byte while a button is held.
-- `sound_while(p, input_zp, mask, voice, note, vol)` — play `note` on `voice`
+- `move_dec` / `move_inc(p, input, mask, addr, min/max)` — clamped movement of a RAM
+  byte (`input` is a gamepad Var; `addr` is any RAM byte, e.g. `OBJ_X + i`).
+- `sound_while(p, input, mask, voice, note, vol)` — play `note` on `voice`
   while any bit of `mask` is held, silence it otherwise (a one-call movement/
   footstep tone). Requires `Game.audio = true`.
 - **Object table:** up to 256 sprites in parallel RAM arrays
@@ -309,8 +310,10 @@ This is the layer that lets you write game *logic* without hand-writing 6502.
 
   `otherwise(p, skip) -> end` turns any of these into if/else (emit the else-body,
   then `put_label(p, end)`).
-- Interop: a `Var`'s raw address is `v.addr`; for older helpers that take a bare
-  zero-page byte (e.g. `read_gamepad1`), pass `u8(v.addr)`.
+- Interop: input, movement, and state helpers all take `Var`s. Object positions
+  live at raw addresses (`OBJ_X + i`); wrap one as a `Var` with `gt.Var{addr = OBJ_Y
+  + i}` to drive it with the state helpers (as the runner's jump does). A Var's raw
+  address, if you ever need it, is `v.addr`.
 - Because you author in Odin, an ordinary build-time `for`/`if` still unrolls at
   zero runtime cost — reach for these helpers only when the *game* must branch on a
   value that isn't known until it runs.
@@ -353,7 +356,7 @@ view moves a whole tile per step, ideal for grid games). Clamp them to
 
 ### Timing — `timer.odin`
 `build_game` bumps a free-running frame counter each frame. `frame_var()` returns
-it as a Var (test with `if_*`, or blink via `if_held(p, frame_var(), 0x10)`).
+it as a Var (test with `if_*`, or blink via `if_pressed(p, frame_var(), 0x10)`).
 `tick(p, t)` is a **saturating** countdown (decrements a Var but stops at 0, unlike
 `dec`) — the building block for cooldowns and one-shot timers; gate on it with
 `if_zero`/`if_nonzero`. `every_n_frames(p, t, n) -> skip` runs a guarded block once
@@ -470,12 +473,18 @@ gametank/
   display.odin    boot, register mirrors, vsync, double-buffered page flipping
   bank.odin       flash-cart banking (set_bank; .Flash2M ROMs)
   blitter.odin    colorfill + sprite blits, clear_screen, counter reset
-  input.odin      Genesis-pad reading + PAD_* masks + if_pressed
-  font.odin       draw_glyph / draw_text from a glyph grid
+  input.odin      gamepad reading (read/poll) + if_pressed / if_just_pressed
+  font.odin       draw_text / draw_string / draw_number(16) / draw_glyph
   asset.odin      inflate_asset / inflate_raw (decompress blobs)
   audio.odin      4-voice square mixer (self-assembled ACP program)
   video.odin      direct-CPU framebuffer helpers (clear_framebuffer)
-  runtime.odin    build_game scaffold, clamped movement, object table
+  runtime.odin    build_game scaffold, movement, object table, animation, collision
+  state.odin      RAM-var allocator + arithmetic + conditionals (game logic)
+  timer.odin      frame counter, countdown tick, every_n_frames
+  random.odin     global LFSR RNG
+  tilemap.odin    draw_tilemap + draw_tilemap_view (scrolling)
+  parallax.odin   scrolling background layers
+  menu.odin       cursor-driven list menus
   rom.odin        Config + build_rom + .gtr layout/output (+ INFLATE bundling)
   assets/         bundled INFLATE routine, ACP program, pitch table
 examples/         one runnable package per feature (see table above)

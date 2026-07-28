@@ -60,12 +60,12 @@ game_gen :: proc(p: ^Program) {
 }
 
 // -----------------------------------------------------------------------------
-// Clamped movement — decrement/increment a RAM byte when a button is held.
-// `input_zp` is a read_gamepad result; `addr` is any RAM byte (e.g. OBJ_X + i).
+// Clamped movement — decrement/increment a RAM byte while a button is held.
+// `input` is a read_gamepad / poll_gamepad Var; `addr` is any RAM byte (OBJ_X + i).
 // -----------------------------------------------------------------------------
 
-move_dec :: proc(p: ^Program, input_zp, mask: u8, addr: u16, min: u8) {
-	emit_imm(p, .LDA, mask); emit_zp(p, .BIT, input_zp)
+move_dec :: proc(p: ^Program, input: Var, mask: u8, addr: u16, min: u8) {
+	emit_imm(p, .LDA, mask); ld_var(p, .BIT, input)
 	skip := anon_fwd(p)
 	emit_branch_id(p, .BEQ, skip)          // button not held
 	emit_abs(p, .LDA, addr); emit_imm(p, .CMP, min + 1)
@@ -74,8 +74,8 @@ move_dec :: proc(p: ^Program, input_zp, mask: u8, addr: u16, min: u8) {
 	put_label(p, skip)
 }
 
-move_inc :: proc(p: ^Program, input_zp, mask: u8, addr: u16, max: u8) {
-	emit_imm(p, .LDA, mask); emit_zp(p, .BIT, input_zp)
+move_inc :: proc(p: ^Program, input: Var, mask: u8, addr: u16, max: u8) {
+	emit_imm(p, .LDA, mask); ld_var(p, .BIT, input)
 	skip := anon_fwd(p)
 	emit_branch_id(p, .BEQ, skip)
 	emit_abs(p, .LDA, addr); emit_imm(p, .CMP, max)
@@ -87,12 +87,12 @@ move_inc :: proc(p: ^Program, input_zp, mask: u8, addr: u16, max: u8) {
 // -----------------------------------------------------------------------------
 // Game-loop audio: play a note while an input is held, silence it otherwise.
 // Pairs with move_dec/move_inc for a one-call movement "footstep" tone. Needs
-// Game.audio = true (so the ACP mixer is running). `input_zp` is a read_gamepad
-// result; `mask` is any OR of PAD_* bits; `voice` is 0..3.
+// Game.audio = true (so the ACP mixer is running). `input` is a read_gamepad Var;
+// `mask` is any OR of PAD_* bits; `voice` is 0..3.
 // -----------------------------------------------------------------------------
 
-sound_while :: proc(p: ^Program, input_zp, mask, voice, note, vol: u8) {
-	emit_imm(p, .LDA, mask); emit_zp(p, .BIT, input_zp)
+sound_while :: proc(p: ^Program, input: Var, mask, voice, note, vol: u8) {
+	emit_imm(p, .LDA, mask); ld_var(p, .BIT, input)
 	quiet := anon_fwd(p)
 	emit_branch_id(p, .BEQ, quiet)         // nothing held -> silence the voice
 	voice_note(p, voice, note, vol)

@@ -10,7 +10,7 @@ import gt "../../gametank"
 // Zero-page variables (framework reserves $00-$0F; app vars start at $10).
 PLAYER_X :: u8(0x10)
 PLAYER_Y :: u8(0x11)
-INPUT    :: u8(0x12)
+INPUT    := gt.Var{addr = 0x12} // the gamepad Var read_gamepad1/if_pressed use
 
 BOX_SIZE :: u8(16)
 POS_MAX  :: u8(128 - 16) // furthest top-left corner that keeps the box on screen
@@ -18,7 +18,7 @@ CENTER   :: u8(56)       // (128 - 16) / 2, roughly
 
 // Decrement `pos` if `mask` is held and we're not already at 0.
 move_neg :: proc(p: ^gt.Program, mask, pos: u8) {
-	gt.emit_imm(p, .LDA, mask); gt.emit_zp(p, .BIT, INPUT)
+	gt.emit_imm(p, .LDA, mask); gt.emit_zp(p, .BIT, u8(INPUT.addr))
 	skip := gt.anon_fwd(p)
 	gt.emit_branch_id(p, .BEQ, skip)   // button not held
 	gt.emit_zp(p, .LDA, pos)
@@ -29,7 +29,7 @@ move_neg :: proc(p: ^gt.Program, mask, pos: u8) {
 
 // Increment `pos` if `mask` is held and we're below `maxv`.
 move_pos :: proc(p: ^gt.Program, mask, pos, maxv: u8) {
-	gt.emit_imm(p, .LDA, mask); gt.emit_zp(p, .BIT, INPUT)
+	gt.emit_imm(p, .LDA, mask); gt.emit_zp(p, .BIT, u8(INPUT.addr))
 	skip := gt.anon_fwd(p)
 	gt.emit_branch_id(p, .BEQ, skip)   // button not held
 	gt.emit_zp(p, .LDA, pos)

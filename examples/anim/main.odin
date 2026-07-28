@@ -30,12 +30,11 @@ setup :: proc(p: ^gt.Program) {
 }
 
 frame :: proc(p: ^gt.Program) {
-	in8 := u8(input.addr)
-	gt.read_gamepad1(p, in8)
-	gt.move_dec(p, in8, gt.PAD_UP,    gt.OBJ_Y + 0, 0)
-	gt.move_inc(p, in8, gt.PAD_DOWN,  gt.OBJ_Y + 0, MAX)
-	gt.move_dec(p, in8, gt.PAD_LEFT,  gt.OBJ_X + 0, 0)
-	gt.move_inc(p, in8, gt.PAD_RIGHT, gt.OBJ_X + 0, MAX)
+	gt.read_gamepad1(p, input)
+	gt.move_dec(p, input, gt.PAD_UP,    gt.OBJ_Y + 0, 0)
+	gt.move_inc(p, input, gt.PAD_DOWN,  gt.OBJ_Y + 0, MAX)
+	gt.move_dec(p, input, gt.PAD_LEFT,  gt.OBJ_X + 0, 0)
+	gt.move_inc(p, input, gt.PAD_RIGHT, gt.OBJ_X + 0, MAX)
 	gt.animate_object(p, 0, anim, BASE, FRAMES, PERIOD)
 	gt.draw_objects(p, 1)
 }

@@ -36,7 +36,7 @@ File layout of this package:
   - bank.odin       flash-cart banking: set_bank (2 MiB carts, .Flash2M ROMs)
   - blitter.odin    colorfill + sprite blits, clear_screen, sprite-RAM counter reset
   - input.odin      Genesis-pad reading + PAD_* masks; if_pressed (held) and
-                    poll_gamepad + if_held / if_just_pressed (edge-triggered)
+                    poll_gamepad + if_pressed / if_just_pressed (edge-triggered)
   - font.odin       draw_text (build-time string) + draw_string / string_blob
                     (runtime, data-driven text) + draw_number / draw_number16 +
                     draw_glyph, from an 8x8 glyph grid
