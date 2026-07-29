@@ -122,3 +122,64 @@ draw_tilemap_view :: proc(p: ^Program, addr: u16, map_cols, view_cols, view_rows
 	c3 := anon_fwd(p); emit_branch_id(p, .BCC, c3); emit_zp(p, .INC, GT_PTR + 1); put_label(p, c3)
 	emit_zp(p, .INC, TM_ROW); emit_zp(p, .LDA, TM_ROW); emit_imm(p, .CMP, view_rows); emit_branch_id(p, .BNE, outer)
 }
+
+// =============================================================================
+// Tile collision — query the map at a pixel point (for platformers, etc.)
+// =============================================================================
+//
+// These read the tile under a *pixel* position (a moving object) rather than a
+// fixed cell: they take an object coordinate Var plus a build-time offset, so you
+// probe points around a sprite — feet at (px+8, py+16), a wall at (px+15, py+8).
+// A tile's index decides its role: `solid_min` splits passable (index < solid_min)
+// from solid (>= solid_min), so a common layout is tile 0 = empty, 1+ = solid.
+
+// GT_PTR = addr + tile_x + tile_y*map_cols for pixel point (x+dx, y+dy); A = tile.
+@(private)
+load_tile :: proc(p: ^Program, addr: u16, map_cols: u8, x: Var, dx: u8, y: Var, dy: u8) {
+	emit_imm(p, .LDA, u8(addr));      emit_zp(p, .STA, GT_PTR)
+	emit_imm(p, .LDA, u8(addr >> 8)); emit_zp(p, .STA, GT_PTR + 1)
+	// += tile_x = (x + dx) >> 4
+	ld_var(p, .LDA, x); emit_impl(p, .CLC); emit_imm(p, .ADC, dx)
+	emit_acc(p, .LSR); emit_acc(p, .LSR); emit_acc(p, .LSR); emit_acc(p, .LSR)
+	emit_impl(p, .CLC); emit_zp(p, .ADC, GT_PTR); emit_zp(p, .STA, GT_PTR)
+	c1 := anon_fwd(p); emit_branch_id(p, .BCC, c1); emit_zp(p, .INC, GT_PTR + 1); put_label(p, c1)
+	// += tile_y * map_cols  (tile_y = (y + dy) >> 4, added via repeated add)
+	ld_var(p, .LDA, y); emit_impl(p, .CLC); emit_imm(p, .ADC, dy)
+	emit_acc(p, .LSR); emit_acc(p, .LSR); emit_acc(p, .LSR); emit_acc(p, .LSR)
+	emit_impl(p, .TAX)
+	td := anon_fwd(p); emit_branch_id(p, .BEQ, td)
+	tl := anon(p)
+	emit_zp(p, .LDA, GT_PTR); emit_impl(p, .CLC); emit_imm(p, .ADC, map_cols); emit_zp(p, .STA, GT_PTR)
+	c2 := anon_fwd(p); emit_branch_id(p, .BCC, c2); emit_zp(p, .INC, GT_PTR + 1); put_label(p, c2)
+	emit_impl(p, .DEX); emit_branch_id(p, .BNE, tl)
+	put_label(p, td)
+	emit_imm(p, .LDY, 0); emit_ind_y(p, .LDA, GT_PTR)   // A = tile index
+}
+
+// Read the tile index at pixel (x+dx, y+dy) of the map (map_cols wide at addr)
+// into `dst`. Clobbers A, X, Y and GT_PTR.
+tile_at :: proc(p: ^Program, addr: u16, map_cols: u8, x: Var, dx: u8, y: Var, dy: u8, dst: Var) {
+	load_tile(p, addr, map_cols, x, dx, y, dy)
+	ld_var(p, .STA, dst)
+}
+
+// Begin an "if the tile at pixel (x+dx, y+dy) is solid" block (its index >=
+// solid_min). Emit the response after this, then close with put_label(p, <id>).
+// e.g. ground: if_solid(p, LEVEL, COLS, px, 8, py, 16, 1).
+if_solid :: proc(p: ^Program, addr: u16, map_cols: u8, x: Var, dx: u8, y: Var, dy: u8, solid_min: u8) -> u32 {
+	load_tile(p, addr, map_cols, x, dx, y, dy)
+	emit_imm(p, .CMP, solid_min)
+	skip := anon_fwd(p)
+	emit_branch_id(p, .BCC, skip)   // tile < solid_min -> passable -> skip the block
+	return skip
+}
+
+// Snap `pos` (an object's Y or X) so an object `height` tall/wide rests flush
+// against the solid tile its far edge is inside: pos = ((pos + height) & ~15) -
+// height. Use after landing (with the player's height) to sit cleanly on a tile.
+snap_to_tile_below :: proc(p: ^Program, pos: Var, height: u8) {
+	ld_var(p, .LDA, pos); emit_impl(p, .CLC); emit_imm(p, .ADC, height)
+	emit_imm(p, .AND, 0xF0)
+	emit_impl(p, .SEC); emit_imm(p, .SBC, height)
+	ld_var(p, .STA, pos)
+}

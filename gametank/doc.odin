@@ -54,7 +54,8 @@ File layout of this package:
   - random.odin     global LFSR RNG: random_seed / random / random_var / random_into
   - timer.odin      frame counter (frame_var) + countdown tick + every_n_frames
   - tilemap.odin    draw_tilemap (a screen-sized grid) + draw_tilemap_view (scroll
-                    a window over a larger map) of 16x16 tiles from a byte map
+                    a window over a larger map) of 16x16 tiles; tile collision
+                    (tile_at / if_solid / snap_to_tile_below) for platformers
   - menu.odin       menu_navigate / menu_cursor / if_chosen: a cursor over a list
   - parallax.odin   layer_scroll / draw_layer: scrolling background layers (parallax)
   - rom.odin        Config + build_rom + .gtr layout/output (+ INFLATE bundling)
