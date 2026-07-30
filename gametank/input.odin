@@ -56,9 +56,7 @@ read_gamepad2 :: proc(p: ^Program, dest: Var) { read_pad(p, GAMEPAD2, GAMEPAD1, 
 if_pressed :: proc(p: ^Program, state: Var, mask: u8) -> u32 {
 	emit_imm(p, .LDA, mask)
 	ld_var(p, .BIT, state)
-	skip := anon_fwd(p)
-	emit_branch_id(p, .BEQ, skip)
-	return skip
+	return begin_if(p, .BNE) // any masked bit set -> Z clear -> enter
 }
 
 // -----------------------------------------------------------------------------
@@ -92,7 +90,5 @@ poll_pad :: proc(p: ^Program, port, other: u16, held, pressed: Var) {
 if_just_pressed :: proc(p: ^Program, pressed: Var, mask: u8) -> u32 {
 	emit_imm(p, .LDA, mask)
 	ld_var(p, .BIT, pressed)
-	skip := anon_fwd(p)
-	emit_branch_id(p, .BEQ, skip)
-	return skip
+	return begin_if(p, .BNE)
 }

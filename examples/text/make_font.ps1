@@ -30,7 +30,7 @@ $font = New-Object System.Drawing.Font("Consolas", 10, [System.Drawing.GraphicsU
 for ($i = 0; $i -lt $chars.Count; $i++) {
 	$cx = ($i % 16) * 8; $cy = [math]::Floor($i / 16) * 8
 	$g.SetClip((New-Object System.Drawing.Rectangle $cx, $cy, 8, 8))
-	$g.DrawString([string]$chars[$i], $font, [System.Drawing.Brushes]::White, ($cx + 0.5), ($cy - 1.5))
+	$g.DrawString([string]$chars[$i], $font, [System.Drawing.Brushes]::White, ($cx + 0.5), ($cy - 2.0))
 	$g.ResetClip()
 }
 $g.Dispose()

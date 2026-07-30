@@ -60,8 +60,13 @@ menu_cursor :: proc(p: ^Program, x, y: u8, cursor: Var, spacing, font_gy: u8) {
 // — i.e. the player confirmed that option. Emit the option's action after this,
 // then close with put_label(p, <returned id>). One if_chosen per option.
 if_chosen :: proc(p: ^Program, cursor: Var, index: u8, pressed: Var, button: u8) -> u32 {
-	skip := anon_fwd(p)
-	emit_imm(p, .LDA, button); ld_var(p, .BIT, pressed); emit_branch_id(p, .BEQ, skip)
-	ld_var(p, .LDA, cursor);   emit_imm(p, .CMP, index); emit_branch_id(p, .BNE, skip)
+	skip  := anon_fwd(p) // far: JMP'd to when not chosen (block can be any size)
+	miss  := anon_fwd(p) // near
+	enter := anon_fwd(p)
+	emit_imm(p, .LDA, button); ld_var(p, .BIT, pressed); emit_branch_id(p, .BEQ, miss)  // not pressed
+	ld_var(p, .LDA, cursor);   emit_imm(p, .CMP, index); emit_branch_id(p, .BEQ, enter) // pressed on this option
+	put_label(p, miss)
+	emit_jump_id(p, skip)
+	put_label(p, enter)
 	return skip
 }

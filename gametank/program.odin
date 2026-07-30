@@ -35,6 +35,7 @@ Program :: struct {
 	resolved:   map[string]u16,           // blob name -> absolute address (pass 2)
 	zp_next:    u8,                       // next free zero-page var address (state.odin)
 	ram_next:   u16,                      // next free general-RAM address (state.odin)
+	var_inited: bool,                     // a game Var has been written (see inflate_raw's ordering guard)
 }
 
 program_init :: proc(p: ^Program, base: u16) {
@@ -207,4 +208,19 @@ emit_jump_id :: proc(p: ^Program, target: u32) {
 		mnemonic = .JMP, operand_count = 1, length = 0,
 		ops = {m.op_label(target, 2), {}, {}},
 	})
+}
+
+// Open a guarded block whose "skip" is a full JMP instead of a relative branch, so
+// the block can be ANY size. A plain 6502 conditional branch only reaches ~127
+// bytes; a larger guarded block overflows it and fails to encode with
+// LABEL_OUT_OF_RANGE. Emit the comparison first, then pass the branch that ENTERS
+// the block (the condition-true mnemonic, e.g. .BEQ for "equal"). Emit the block,
+// then close it with put_label(p, <returned id>). Used by all the if_* helpers.
+begin_if :: proc(p: ^Program, enter_cc: m.Mnemonic) -> u32 {
+	skip  := anon_fwd(p)
+	enter := anon_fwd(p)
+	emit_branch_id(p, enter_cc, enter) // condition true -> hop into the block (short)
+	emit_jump_id(p, skip)              // condition false -> JMP past it (any distance)
+	put_label(p, enter)
+	return skip
 }

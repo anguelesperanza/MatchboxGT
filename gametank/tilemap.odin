@@ -169,9 +169,7 @@ tile_at :: proc(p: ^Program, addr: u16, map_cols: u8, x: Var, dx: u8, y: Var, dy
 if_solid :: proc(p: ^Program, addr: u16, map_cols: u8, x: Var, dx: u8, y: Var, dy: u8, solid_min: u8) -> u32 {
 	load_tile(p, addr, map_cols, x, dx, y, dy)
 	emit_imm(p, .CMP, solid_min)
-	skip := anon_fwd(p)
-	emit_branch_id(p, .BCC, skip)   // tile < solid_min -> passable -> skip the block
-	return skip
+	return begin_if(p, .BCS)   // tile >= solid_min -> solid -> enter the block
 }
 
 // Snap `pos` (an object's Y or X) so an object `height` tall/wide rests flush

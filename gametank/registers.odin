@@ -83,7 +83,8 @@ VECTORS :: u16(0xFFFA) // NMI ($FFFA), RESET ($FFFC), IRQ ($FFFE)
 // uses $F0-$FF as scratch — run it before you set up anything in low zero page.
 
 INFLATE_ENTRY :: u16(0xE000) // JSR here to decompress
-INFLATE_ZP    :: u8(0xF0)    // $F0/$F1 = src ptr, $F2/$F3 = dst ptr
+INFLATE_ZP    :: u8(0xF0)    // $F0/$F1 = src ptr, $F2/$F3 = dst ptr (but INFLATE
+                             // uses ALL of zero page as scratch — see inflate_raw)
 
 // --- Zero-page conventions used by this framework -----------------------------
 //

@@ -77,8 +77,8 @@ ld_var :: proc(p: ^Program, mn: Mnemonic, v: Var) {
 // Assignment + arithmetic. Everything except inc/dec clobbers A.
 // -----------------------------------------------------------------------------
 
-set      :: proc(p: ^Program, v: Var, n: u8) { emit_imm(p, .LDA, n); ld_var(p, .STA, v) }     // v = n
-copy_var :: proc(p: ^Program, dst, src: Var) { ld_var(p, .LDA, src); ld_var(p, .STA, dst) }  // dst = src
+set      :: proc(p: ^Program, v: Var, n: u8) { p.var_inited = true; emit_imm(p, .LDA, n); ld_var(p, .STA, v) }     // v = n
+copy_var :: proc(p: ^Program, dst, src: Var) { p.var_inited = true; ld_var(p, .LDA, src); ld_var(p, .STA, dst) }  // dst = src
 inc     :: proc(p: ^Program, v: Var)          { ld_var(p, .INC, v) }                                // v += 1 (255 -> 0)
 dec     :: proc(p: ^Program, v: Var)          { ld_var(p, .DEC, v) }                                // v -= 1 (0 -> 255)
 
@@ -94,28 +94,22 @@ sub_var :: proc(p: ^Program, v, o: Var)       { ld_var(p, .LDA, v); emit_impl(p,
 // -----------------------------------------------------------------------------
 
 if_eq :: proc(p: ^Program, v: Var, n: u8) -> u32 { // v == n
-	ld_var(p, .LDA, v); emit_imm(p, .CMP, n)
-	skip := anon_fwd(p); emit_branch_id(p, .BNE, skip); return skip
+	ld_var(p, .LDA, v); emit_imm(p, .CMP, n); return begin_if(p, .BEQ)
 }
 if_ne :: proc(p: ^Program, v: Var, n: u8) -> u32 { // v != n
-	ld_var(p, .LDA, v); emit_imm(p, .CMP, n)
-	skip := anon_fwd(p); emit_branch_id(p, .BEQ, skip); return skip
+	ld_var(p, .LDA, v); emit_imm(p, .CMP, n); return begin_if(p, .BNE)
 }
-if_lt :: proc(p: ^Program, v: Var, n: u8) -> u32 { // v < n
-	ld_var(p, .LDA, v); emit_imm(p, .CMP, n)
-	skip := anon_fwd(p); emit_branch_id(p, .BCS, skip); return skip // skip when v >= n
+if_lt :: proc(p: ^Program, v: Var, n: u8) -> u32 { // v < n (unsigned)
+	ld_var(p, .LDA, v); emit_imm(p, .CMP, n); return begin_if(p, .BCC)
 }
-if_ge :: proc(p: ^Program, v: Var, n: u8) -> u32 { // v >= n
-	ld_var(p, .LDA, v); emit_imm(p, .CMP, n)
-	skip := anon_fwd(p); emit_branch_id(p, .BCC, skip); return skip // skip when v < n
+if_ge :: proc(p: ^Program, v: Var, n: u8) -> u32 { // v >= n (unsigned)
+	ld_var(p, .LDA, v); emit_imm(p, .CMP, n); return begin_if(p, .BCS)
 }
-if_zero :: proc(p: ^Program, v: Var) -> u32 {      // v == 0 (no CMP needed)
-	ld_var(p, .LDA, v)
-	skip := anon_fwd(p); emit_branch_id(p, .BNE, skip); return skip
+if_zero :: proc(p: ^Program, v: Var) -> u32 {      // v == 0
+	ld_var(p, .LDA, v); return begin_if(p, .BEQ)
 }
 if_nonzero :: proc(p: ^Program, v: Var) -> u32 {   // v != 0
-	ld_var(p, .LDA, v)
-	skip := anon_fwd(p); emit_branch_id(p, .BEQ, skip); return skip
+	ld_var(p, .LDA, v); return begin_if(p, .BNE)
 }
 
 // -----------------------------------------------------------------------------
@@ -151,6 +145,7 @@ ld16 :: proc(p: ^Program, mn: Mnemonic, v: Var16, hi: bool) {
 }
 
 set16 :: proc(p: ^Program, v: Var16, n: u16) { // v = n; clobbers A
+	p.var_inited = true
 	emit_imm(p, .LDA, u8(n)); ld16(p, .STA, v, false)
 	emit_imm(p, .LDA, u8(n >> 8)); ld16(p, .STA, v, true)
 }

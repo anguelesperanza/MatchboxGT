@@ -354,6 +354,14 @@ view moves a whole tile per step, ideal for grid games). Clamp them to
 `[0, map_cols-view_cols]` / `[0, map_rows-view_rows]` yourself (e.g. `move_dec`/
 `move_inc` gated with `every_n_frames`). See `examples/scroll`.
 
+For **object-vs-tile collision** (platformers), probe the map at a pixel point:
+`tile_at(p, addr, map_cols, x, dx, y, dy, dst)` reads the tile under (x+dx, y+dy)
+into `dst`, and `if_solid(p, addr, map_cols, x, dx, y, dy, solid_min) -> id` opens a
+block when that tile is solid (index ≥ `solid_min`) — pass an object's position Var
+plus an offset to probe its feet `(px,8, py,16)` or sides `(px,15, py,8)`.
+`snap_to_tile_below(p, pos, height)` rests an object of `height` flush on the tile
+its far edge is in (for clean landings). See `examples/platformer`.
+
 ### Timing — `timer.odin`
 `build_game` bumps a free-running frame counter each frame. `frame_var()` returns
 it as a Var (test with `if_*`, or blink via `if_pressed(p, frame_var(), 0x10)`).
@@ -460,6 +468,7 @@ Run each from the repo root with `odin run examples/<name>`; each writes a
 | `palette` | fills the screen with all 256 GameTank colors — a reference for picking color bytes |
 | `imgtest` | loads a sprite converted from a PNG by `tools/png_to_sheet.ps1` (the image-import workflow) |
 | `runner`  | parallax endless-runner base — 3 background layers scrolling at different speeds, plus a running, jumping character (`layer_scroll`/`draw_layer`) |
+| `platformer` | a single-screen platformer — run, jump (gravity), and land on / be blocked by solid tiles (`if_solid`/`snap_to_tile_below`) |
 
 ---
 

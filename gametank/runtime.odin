@@ -209,11 +209,16 @@ abs_delta :: proc(p: ^Program, base: u16, a, b: u8) {
 // Both indices are build-time constants. Clobbers A. A hidden object (Y >=
 // OBJ_HIDDEN) is far off-screen, so it naturally stops registering hits.
 if_overlap :: proc(p: ^Program, a, b: u8, size: u8 = 16) -> u32 {
-	skip := anon_fwd(p)
+	skip  := anon_fwd(p) // far: JMP'd to on a miss (so the block can be any size)
+	miss  := anon_fwd(p) // near
+	enter := anon_fwd(p)
 	abs_delta(p, OBJ_X, a, b)
-	emit_imm(p, .CMP, size); emit_branch_id(p, .BCS, skip) // |dx| >= size -> miss
+	emit_imm(p, .CMP, size); emit_branch_id(p, .BCS, miss)  // |dx| >= size -> miss
 	abs_delta(p, OBJ_Y, a, b)
-	emit_imm(p, .CMP, size); emit_branch_id(p, .BCS, skip) // |dy| >= size -> miss
+	emit_imm(p, .CMP, size); emit_branch_id(p, .BCC, enter) // |dy| < size -> overlap
+	put_label(p, miss)
+	emit_jump_id(p, skip)
+	put_label(p, enter)
 	return skip
 }
 
