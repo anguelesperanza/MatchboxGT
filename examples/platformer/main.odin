@@ -6,7 +6,7 @@ package main
 //
 //   odin run examples/platformer     # from the repo root; writes platformer.gtr
 //
-// Tileset (examples/platformer/tiles.gtg.deflate, from make_platformer.ps1):
+// Tileset (examples/platformer/tiles.gtg.deflate, from make_platformer):
 // tile 0 = air (passable), tile 1 = solid ground; player sprite at sheet X=32.
 
 import gt "../../gametank"

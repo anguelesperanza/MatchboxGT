@@ -7,7 +7,7 @@ package main
 //
 //   odin run examples/tilemap     # from the repo root; writes tilemap.gtr
 //
-// Sheet (examples/tilemap/tiles.gtg.deflate, from make_tiles.ps1): tile 0 = floor,
+// Sheet (examples/tilemap/tiles.gtg.deflate, from make_tiles): tile 0 = floor,
 // tile 1 = wall, and a player sprite at sheet X=32, all at row 0.
 
 import gt "../../gametank"

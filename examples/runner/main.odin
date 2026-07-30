@@ -6,7 +6,7 @@ package main
 //
 //   odin run examples/runner     # from the repo root; writes runner.gtr
 //
-// Sheet (examples/runner/runner.gtg.deflate, from make_runner.ps1): 4 run frames at
+// Sheet (examples/runner/runner.gtg.deflate, from make_runner): 4 run frames at
 // gy 0, and 128-wide seamless strips for mountains (gy 16), hills (gy 40), ground
 // (gy 64).
 

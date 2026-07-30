@@ -1,9 +1,9 @@
 package main
 
-// Loads a sprite converted from a PNG by tools/png_to_sheet.ps1 and draws it —
+// Loads a sprite converted from a PNG by tools/png_to_sheet and draws it —
 // end-to-end proof that "draw art -> convert -> load" works.
 //
-//   pwsh tools/png_to_sheet.ps1 examples/imgtest/hero.png examples/imgtest/hero.gtg.deflate -Palette examples/imgtest/pal.txt
+//   odin run tools/png_to_sheet -- examples/imgtest/hero.png examples/imgtest/hero.gtg.deflate --palette examples/imgtest/pal.txt
 //   odin run examples/imgtest
 
 import gt "../../gametank"

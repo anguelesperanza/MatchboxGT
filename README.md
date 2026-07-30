@@ -246,7 +246,7 @@ INFLATE owns the graphics bus. Workflow: produce a `.gtg.deflate` → `blob_file
 → build with `inflate = true` → `inflate_asset` it, then draw. The `.gtg.deflate`
 format is a **raw DEFLATE** stream of a 128×128, 1-byte-per-pixel sprite-RAM image
 (each byte a `HHHSSBBB` color; `0` = transparent). Any standard deflate encoder
-works — `examples/anim/make_coin.ps1` generates one with .NET's `DeflateStream`.
+works — the native `examples/anim/make_coin` generator produces one via `vendor:zlib`.
 
 ### Banking — `bank.odin` (`.Flash2M` only)
 `set_bank(p, page)` / `set_bank_var(p, page_zp)` select the 16 KiB bank (0–126)
@@ -408,32 +408,34 @@ cells within that image (frame *N* of a 16px strip sits at sheet X = `N*16`).
 
 **Two steps: build the raw bytes, then deflate them.**
 
-**From an image file** (draw in any editor) — [`tools/png_to_sheet.ps1`](tools/png_to_sheet.ps1)
+**From an image file** (draw in any editor) — [`tools/png_to_sheet`](tools/png_to_sheet)
 converts a PNG/BMP straight to `.gtg.deflate`. Lay your sprites/tiles/glyphs out in
 one image at the grid positions your code reads; fully-transparent pixels become
 GameTank color 0. Two modes:
 
 ```bash
 # exact: you supply an "RRGGBB HH" palette (RGB -> GameTank byte) — best for real art
-pwsh tools/png_to_sheet.ps1 art.png sheet.gtg.deflate -Palette pal.txt
+odin run tools/png_to_sheet -- art.png sheet.gtg.deflate --palette pal.txt
 # approximate: auto-map each pixel to the nearest GameTank color — quick prototyping
-pwsh tools/png_to_sheet.ps1 art.png sheet.gtg.deflate -Quantize
+odin run tools/png_to_sheet -- art.png sheet.gtg.deflate --quantize
 ```
 
-Run `examples/palette` to see the real on-screen 256-color palette (a 16×16 grid of
-`row*16+col` bytes) and pick the bytes for your exact palette. `examples/imgtest`
-is a full worked example (PNG → convert → load → draw).
+Ready-made palettes for your art tool live in [`tools/palette`](tools/palette) —
+import `gametank.gpl` (GIMP/Aseprite/Krita/…) to draw with the real DAC colors, then
+convert with the matching `--palette tools/palette/gametank.pal.txt`. Or run
+`examples/palette` to see the on-screen 256-color grid and pick bytes by hand.
+`examples/imgtest` is a full worked example (PNG → convert → load → draw).
 
 **From code**, if you'd rather generate art programmatically, it's two steps:
 
 1. **Author the image as raw color bytes** — the 16384-byte array. Worked example:
-   [`examples/anim/make_coin.ps1`](examples/anim/make_coin.ps1) draws a 4-frame
-   spinning coin (ellipses in gold `0x3C`).
-2. **Deflate to `.gtg.deflate`** with [`tools/deflate.ps1`](tools/deflate.ps1) (any
-   standard DEFLATE encoder works — plain RFC 1951, no zlib header):
+   [`examples/anim/make_coin`](examples/anim/make_coin) draws a 4-frame spinning
+   coin (ellipses in gold `0x3C`) with the shared [`tools/gtimg`](tools/gtimg) helpers.
+2. **Deflate to `.gtg.deflate`** with [`tools/deflate`](tools/deflate) (any standard
+   DEFLATE encoder works — plain RFC 1951, no zlib header):
 
    ```bash
-   pwsh tools/deflate.ps1 my_sheet.bin sheet.gtg.deflate
+   odin run tools/deflate -- my_sheet.bin sheet.gtg.deflate
    ```
 
 **Use it in a ROM:** `blob_file(p, "sheet", "path/sheet.gtg.deflate")` →
@@ -442,6 +444,40 @@ run before double-buffering) → then draw with `draw_sprite` / the object table
 `draw_number` / `draw_string`. Colors are the emulator's DAC palette (approximate —
 verify a swatch), and any deflate encoder's output is decoded on-cart, so **test a
 new sheet in the emulator** once.
+
+---
+
+## Tools
+
+All asset tooling is **native Odin** — no PowerShell or .NET — so it runs on Linux
+and macOS as well as Windows. (The one exception is `examples/text/make_font.ps1`,
+still PowerShell because it rasterizes a TrueType font through Windows GDI+.)
+
+Compression uses `vendor:zlib`, which links the system zlib. Windows and macOS need
+nothing extra; on Linux, install the dev package if the linker can't find `-lz`:
+`zlib1g-dev` (Debian/Ubuntu) or `zlib-devel` (Fedora).
+
+**CLI tools** — `odin run <tool> -- <args>` (from the repo root):
+
+| Tool | Command | What it does |
+|---|---|---|
+| [`tools/deflate`](tools/deflate) | `odin run tools/deflate -- <in.bin> [out.gtg.deflate]` | Raw sprite-RAM bytes → `.gtg.deflate`. Defaults the output next to the input. |
+| [`tools/png_to_sheet`](tools/png_to_sheet) | `odin run tools/png_to_sheet -- <img> [out] (--palette <file> \| --quantize)` | PNG/BMP → sheet — see [Making sprite sheets](#making-sprite-sheets-gtgdeflate) for the two modes. |
+
+**Asset generators** — regenerate an example's committed sheet from code (run from
+the repo root; pass a path to write elsewhere, e.g. `… -- /tmp/coin.gtg.deflate`):
+
+| Command | Writes |
+|---|---|
+| `odin run examples/anim/make_coin` | `examples/anim/coin.gtg.deflate` (4-frame spinning coin) |
+| `odin run examples/tilemap/make_tiles` | `examples/tilemap/tiles.gtg.deflate` (floor + wall + player) |
+| `odin run examples/platformer/make_platformer` | `examples/platformer/tiles.gtg.deflate` (air + ground block + player) |
+| `odin run examples/runner/make_runner` | `examples/runner/runner.gtg.deflate` (run frames + 3 parallax strips) |
+
+**[`tools/gtimg`](tools/gtimg)** is the shared library they all use: `new_sheet` /
+`px` / `rect` to build a 128×128 sheet, `deflate_raw` to compress, and `write_gtg`
+to deflate + write in one call. Import it (`import gt "../../tools/gtimg"`) to write
+your own generator.
 
 ---
 
@@ -460,13 +496,13 @@ Run each from the repo root with `odin run examples/<name>`; each writes a
 | `audio`   | the 4-voice ACP mixer (`audio_init` + `voice_note`) |
 | `banking` | a `.Flash2M` banked cart with `set_bank` |
 | `runtime` | the `build_game` scaffold: input movement, per-object velocity + wall bounce, collision pickups, a game-loop sound, and a state var driving a win condition |
-| `anim`    | sprite animation — a 4-frame spinning coin on a timer (`animate_object`); sheet generated by `make_coin.ps1` |
+| `anim`    | sprite animation — a 4-frame spinning coin on a timer (`animate_object`); sheet generated by `make_coin` |
 | `text`    | runtime text — a dialogue box drawn from ROM with `draw_string`, using a full upper/lowercase + punctuation font (`make_font.ps1`) |
-| `tilemap` | a walled room drawn from a byte map with `draw_tilemap`, plus a hero you walk around inside it (`make_tiles.ps1`) |
+| `tilemap` | a walled room drawn from a byte map with `draw_tilemap`, plus a hero you walk around inside it (`make_tiles`) |
 | `menu`    | a four-option menu with a ">" cursor, D-pad navigation, and A to confirm (`menu_navigate`/`menu_cursor`/`if_chosen`) |
 | `scroll`  | a scrolling tilemap — an 8×6 window you scroll over a larger 12×10 map with the D-pad (`draw_tilemap_view`) |
 | `palette` | fills the screen with all 256 GameTank colors — a reference for picking color bytes |
-| `imgtest` | loads a sprite converted from a PNG by `tools/png_to_sheet.ps1` (the image-import workflow) |
+| `imgtest` | loads a sprite converted from a PNG by `tools/png_to_sheet` (the image-import workflow) |
 | `runner`  | parallax endless-runner base — 3 background layers scrolling at different speeds, plus a running, jumping character (`layer_scroll`/`draw_layer`) |
 | `platformer` | a single-screen platformer — run, jump (gravity), and land on / be blocked by solid tiles (`if_solid`/`snap_to_tile_below`) |
 
