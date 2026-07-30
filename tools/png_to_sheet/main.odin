@@ -22,7 +22,6 @@ import "core:fmt"
 import "core:image"
 import "core:image/bmp"
 import "core:image/png"
-import "core:math"
 import "core:os"
 import "core:strconv"
 import "core:strings"
@@ -31,37 +30,8 @@ import gt "../gtimg"
 _ :: bmp // ensure the BMP loader is linked (registers itself)
 _ :: png
 
-// GameTank color (HHHSSBBB) -> approximate RGB, for --quantize nearest matching.
-hue_deg := [8]f64{120, 60, 30, 0, 300, 260, 240, 180} // green,yellow,orange,red,magenta,indigo,blue,cyan (rough)
-
-byte_to_rgb :: proc(b: int) -> [3]int {
-	h := (b >> 5) & 7
-	s := (b >> 3) & 3
-	br := b & 7
-	v := f64(br) / 7.0
-	if s == 0 { // grayscale
-		g := int(v * 255)
-		return {g, g, g}
-	}
-	sat := f64(s) / 3.0
-	if br > 4 { // high brightness washes toward white
-		sat = sat * f64(7 - br) / 3.0
-	}
-	hh := hue_deg[h] / 60.0
-	c := v * sat
-	xx := c * (1 - abs(math.mod(hh, 2) - 1))
-	m := v - c
-	r, gc, bl: f64
-	switch int(math.floor(hh)) {
-	case 0: r = c;  gc = xx; bl = 0
-	case 1: r = xx; gc = c;  bl = 0
-	case 2: r = 0;  gc = c;  bl = xx
-	case 3: r = 0;  gc = xx; bl = c
-	case 4: r = xx; gc = 0;  bl = c
-	case:   r = c;  gc = 0;  bl = xx
-	}
-	return {int((r + m) * 255), int((gc + m) * 255), int((bl + m) * 255)}
-}
+// --quantize maps each pixel to the nearest GameTank color using `dac_rgb` (the
+// real DAC palette in dac_palette.odin), so the result matches on-screen colors.
 
 main :: proc() {
 	// --- parse args: <input> [output] (--quantize | --palette <file>) ---
@@ -144,13 +114,6 @@ main :: proc() {
 		}
 	}
 
-	pal_rgb: [256][3]int // quantize mode: precomputed palette RGBs
-	if quantize {
-		for k in 0 ..< 256 {
-			pal_rgb[k] = byte_to_rgb(k)
-		}
-	}
-
 	// --- map pixels into the sheet ---
 	out := gt.new_sheet()
 	defer delete(out)
@@ -173,8 +136,7 @@ main :: proc() {
 				best := 0
 				bd := max(int)
 				for k in 1 ..< 256 {
-					c := pal_rgb[k]
-					dr := r - c[0]; dg := g - c[1]; db := bl - c[2]
+					dr := r - int(dac_rgb[k][0]); dg := g - int(dac_rgb[k][1]); db := bl - int(dac_rgb[k][2])
 					d := dr * dr + dg * dg + db * db
 					if d < bd { bd = d; best = k }
 				}
