@@ -9,7 +9,7 @@ package main
 import gt "../../gametank"
 
 setup :: proc(p: ^gt.Program) {
-	gt.blob_file(p, "hero", "examples/imgtest/hero.gtg.deflate")
+	gt.blob(p, "hero", #load("hero.gtg.deflate"))
 	gt.inflate_asset(p, "hero")
 	gt.set_object(p, 0, 56, 56, 0, 0) // the converted sprite sits at sheet (0,0)
 }

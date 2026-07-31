@@ -5,7 +5,7 @@ package main
 // player is a normal object drawn on top. This is the base for roguelike rooms and
 // RPG maps — swap the map bytes (in ROM or RAM) to change the level.
 //
-//   odin run examples/tilemap     # from the repo root; writes tilemap.gtr
+//   odin run examples/tilemap     # from the repo root (or `odin run .` from this folder); writes tilemap.gtr
 //
 // Sheet (examples/tilemap/tiles.gtg.deflate, from make_tiles): tile 0 = floor,
 // tile 1 = wall, and a player sprite at sheet X=32, all at row 0.
@@ -30,7 +30,7 @@ room := [?]u8{
 input: gt.Var
 
 setup :: proc(p: ^gt.Program) {
-	gt.blob_file(p, "tiles", "examples/tilemap/tiles.gtg.deflate")
+	gt.blob(p, "tiles", #load("tiles.gtg.deflate"))
 	gt.inflate_asset(p, "tiles")
 	gt.blob(p, "room", room[:])
 	gt.set_object(p, 0, 40, 40, 32, 0) // hero (sheet 32,0) starting on the floor

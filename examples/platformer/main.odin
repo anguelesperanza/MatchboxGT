@@ -4,7 +4,7 @@ package main
 // down; you land on and are blocked by solid tiles. The physics is the runner's
 // jump plus tile collision (if_solid / snap_to_tile_below) against the level map.
 //
-//   odin run examples/platformer     # from the repo root; writes platformer.gtr
+//   odin run examples/platformer     # from the repo root (or `odin run .` from this folder); writes platformer.gtr
 //
 // Tileset (examples/platformer/tiles.gtg.deflate, from make_platformer):
 // tile 0 = air (passable), tile 1 = solid ground; player sprite at sheet X=32.
@@ -39,7 +39,7 @@ px := gt.Var{addr = gt.OBJ_X + 0} // the player's X/Y ARE object 0's position by
 py := gt.Var{addr = gt.OBJ_Y + 0}
 
 setup :: proc(p: ^gt.Program) {
-	gt.blob_file(p, "tiles", "examples/platformer/tiles.gtg.deflate")
+	gt.blob(p, "tiles", #load("tiles.gtg.deflate"))
 	gt.inflate_asset(p, "tiles")
 	gt.blob(p, "level", level[:])
 	gt.set_object(p, 0, 24, 8, 32, 0) // player (sheet 32,0), spawned in the air to fall in

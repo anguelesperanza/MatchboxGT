@@ -3,7 +3,7 @@ package main
 // A box bouncing around the screen — a double-buffered, blitter-drawn animation
 // on the GameTank, built with the `gametank` framework.
 //
-//   odin run examples/bounce      # from the repo root; writes bounce.gtr
+//   odin run examples/bounce      # from the repo root (or `odin run .` from this folder); writes bounce.gtr
 //
 // Each frame: wait for vblank, flip buffers, move the box, then redraw the
 // background and the box into the now-hidden page with colorfill blits.

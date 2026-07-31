@@ -4,7 +4,7 @@ package main
 // INFLATE routine, then blit it to the screen (double-buffered).
 //
 // The asset (gametank.gtg.deflate) was produced by the standalone deflate tool
-// from gametank.bmp. Build from the repo root:
+// from gametank.bmp. Build from the repo root (or `odin run .` from this folder):
 //
 //   odin run examples/sprite       # writes sprite.gtr
 
@@ -14,7 +14,7 @@ assemble :: proc(p: ^gt.Program) {
 	bg := gt.color(gt.HUE_INDIGO, gt.SAT_MORE, 1)
 
 	// Embed the compressed sprite (relative to the repo root at build time).
-	gt.blob_file(p, "logo", "examples/sprite/gametank.gtg.deflate")
+	gt.blob(p, "logo", #load("gametank.gtg.deflate"))
 
 	// --- basic CPU init, then decompress the sprite into sprite RAM ----------
 	gt.emit_impl(p, .SEI)

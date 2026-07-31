@@ -4,7 +4,7 @@ package main
 // scroll left at different speeds for depth, while a little runner animates in place
 // and jumps with A. Add obstacles + collision + a score and you have a game.
 //
-//   odin run examples/runner     # from the repo root; writes runner.gtr
+//   odin run examples/runner     # from the repo root (or `odin run .` from this folder); writes runner.gtr
 //
 // Sheet (examples/runner/runner.gtg.deflate, from make_runner): 4 run frames at
 // gy 0, and 128-wide seamless strips for mountains (gy 16), hills (gy 40), ground
@@ -26,7 +26,7 @@ held, pressed, vy, anim, mtn, hill, gnd: gt.Var
 py := gt.Var{addr = gt.OBJ_Y + 0} // the player's y IS object 0's Y byte
 
 setup :: proc(p: ^gt.Program) {
-	gt.blob_file(p, "sheet", "examples/runner/runner.gtg.deflate")
+	gt.blob(p, "sheet", #load("runner.gtg.deflate"))
 	gt.inflate_asset(p, "sheet")
 	gt.set_object(p, 0, PLAYER_X, GROUND_Y, 0, 0) // runner: frame 0 at (0,0)
 	held = gt.alloc_var(p); pressed = gt.alloc_var(p); vy = gt.alloc_var(p)

@@ -8,7 +8,7 @@ package main
 // every runtime piece: input movement, per-object velocity, collision, a game-loop
 // sound, and a game-state variable driving a conditional.
 //
-//   odin run examples/runtime    # from the repo root; writes runtime.gtr
+//   odin run examples/runtime    # from the repo root (or `odin run .` from this folder); writes runtime.gtr
 //
 // Sprites come from the game's sheet: player 16x16 at (0,0), coin at (16,0).
 // A tone plays on voice 0 while the player is moving (turn emulator sound on).
@@ -25,7 +25,7 @@ input:     gt.Var     // this frame's gamepad byte
 collected: gt.Var     // how many coins have been picked up
 
 setup :: proc(p: ^gt.Program) {
-	gt.blob_file(p, "sprites", "examples/game/sprites.gtg.deflate")
+	gt.blob(p, "sprites", #load("../game/sprites.gtg.deflate"))
 	gt.inflate_asset(p, "sprites")
 	gt.set_object(p, 0, 56, 56, 0, 0)   // player  (sheet 0,0)
 	gt.set_object(p, 1, 24, 24, 16, 0)  // coins   (sheet 16,0)

@@ -6,7 +6,7 @@ package main
 // plays. Tap A to reroll the coin (rate-limited by a cooldown), and if you dawdle
 // the coin escapes on its own every few seconds. A frame counter ticks bottom-left.
 //
-//   odin run examples/game       # from the repo root; writes game.gtr
+//   odin run examples/game       # from the repo root (or `odin run .` from this folder); writes game.gtr
 //
 // Sprites (examples/game/sprites.gtg.deflate): player 16x16 at sheet (0,0), coin
 // at (16,0), and the digit/letter font grid at row 16.
@@ -30,7 +30,7 @@ held, pressed, jingle, cooldown, escape: gt.Var
 score: gt.Var16   // 16-bit so it counts past 255
 
 setup :: proc(p: ^gt.Program) {
-	gt.blob_file(p, "sprites", "examples/game/sprites.gtg.deflate")
+	gt.blob(p, "sprites", #load("sprites.gtg.deflate"))
 	gt.inflate_asset(p, "sprites")
 	gt.set_object(p, PLAYER, 56, 56, 0, 0)   // player sprite at sheet (0,0)
 	gt.set_object(p, COIN,   96, 32, 16, 0)  // coin sprite at sheet (16,0)

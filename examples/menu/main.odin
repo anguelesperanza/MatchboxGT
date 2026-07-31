@@ -4,7 +4,7 @@ package main
 // the selection, and pressing A confirms an option. The confirmed index shows at
 // the bottom. This is the RPG command-menu / card-selection pattern.
 //
-//   odin run examples/menu       # from the repo root; writes menu.gtr
+//   odin run examples/menu       # from the repo root (or `odin run .` from this folder); writes menu.gtr
 //
 // Uses the full-charset font (examples/text/font.gtg.deflate, from make_font.ps1).
 
@@ -18,7 +18,7 @@ STEP    :: u8(16) // rows are this far apart
 held, pressed, cursor, chosen: gt.Var
 
 setup :: proc(p: ^gt.Program) {
-	gt.blob_file(p, "font", "examples/text/font.gtg.deflate")
+	gt.blob(p, "font", #load("../text/font.gtg.deflate"))
 	gt.inflate_asset(p, "font")
 	gt.string_blob(p, "o0", "Fight")
 	gt.string_blob(p, "o1", "Magic")

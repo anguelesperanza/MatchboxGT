@@ -2,7 +2,7 @@ package main
 
 // "HELLO, WORLD!" for the GameTank, built on the `gametank` framework.
 //
-//   odin run examples/hello        # from the repo root; writes hello.gtr
+//   odin run examples/hello        # from the repo root (or `odin run .` from this folder); writes hello.gtr
 
 import gt "../../gametank"
 

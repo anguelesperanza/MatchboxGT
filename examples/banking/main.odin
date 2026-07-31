@@ -4,7 +4,7 @@ package main
 // second we flip which bank is mapped and fill the screen with the color read
 // from $8000 — so the screen alternates cyan/gold, proving the bank switched.
 //
-//   odin run examples/banking    # from the repo root; writes banking.gtr (2 MiB)
+//   odin run examples/banking    # from the repo root (or `odin run .` from this folder); writes banking.gtr (2 MiB)
 
 import gt "../../gametank"
 

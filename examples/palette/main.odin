@@ -4,7 +4,7 @@ package main
 // grid of 8x8 blocks — the byte at grid (col, row) is row*16 + col (reading order).
 // Handy to see the real DAC palette, and used to extract it (screenshot + sample).
 //
-//   odin run examples/palette     # from the repo root; writes palette.gtr
+//   odin run examples/palette     # from the repo root (or `odin run .` from this folder); writes palette.gtr
 
 import gt "../../gametank"
 

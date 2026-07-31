@@ -3,7 +3,7 @@ package main
 // D-pad controlled box on the GameTank, built with the `gametank` framework.
 // Move the box with the directional pad; press Start to recenter it.
 //
-//   odin run examples/move        # from the repo root; writes move.gtr
+//   odin run examples/move        # from the repo root (or `odin run .` from this folder); writes move.gtr
 
 import gt "../../gametank"
 

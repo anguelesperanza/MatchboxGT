@@ -441,7 +441,10 @@ convert with the matching `--palette tools/palette/gametank.pal.txt`. Or run
 **Use it in a ROM:** `blob_file(p, "sheet", "path/sheet.gtg.deflate")` →
 `inflate_asset(p, "sheet")` in `setup` (needs `Config.inflate = true`, and it must
 run before double-buffering) → then draw with `draw_sprite` / the object table /
-`draw_number` / `draw_string`. Colors are the emulator's DAC palette (approximate —
+`draw_number` / `draw_string`. `blob_file` reads the path at build time relative to
+your **current directory**; to make it independent of where you run `odin`, embed
+the bytes with `blob(p, "sheet", #load("sheet.gtg.deflate"))` instead — `#load`
+resolves relative to the source file (this is what the examples do). Colors are the emulator's DAC palette (approximate —
 verify a swatch), and any deflate encoder's output is decoded on-cart, so **test a
 new sheet in the emulator** once.
 
@@ -483,8 +486,10 @@ your own generator.
 
 ## Examples
 
-Run each from the repo root with `odin run examples/<name>`; each writes a
-`.gtr` of the same name.
+Run each with `odin run examples/<name>` from the repo root, or `odin run .` from
+inside the example's folder — either works (assets are embedded with `#load`, which
+resolves relative to the source, so the current directory doesn't matter). Each
+writes a `.gtr` of the same name.
 
 | Example | Shows |
 |---|---|

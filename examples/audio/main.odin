@@ -3,7 +3,7 @@ package main
 // Audio demo: a 3-chord progression (C -> F -> G) played on three voices at once
 // — polyphony via the ACP mixer. Three bars show the three voices' pitches.
 //
-//   odin run examples/audio      # from the repo root; writes audio.gtr
+//   odin run examples/audio      # from the repo root (or `odin run .` from this folder); writes audio.gtr
 //
 // (Turn the emulator's sound on — you should hear three notes together, cycling.)
 

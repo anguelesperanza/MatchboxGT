@@ -5,7 +5,7 @@ package main
 // tile-aligned scrolling — the view moves a whole tile per step, which is exactly
 // what grid-step games (roguelikes, tile RPGs) want.
 //
-//   odin run examples/scroll     # from the repo root; writes scroll.gtr
+//   odin run examples/scroll     # from the repo root (or `odin run .` from this folder); writes scroll.gtr
 //
 // Reuses the tilemap tileset (examples/tilemap/tiles.gtg.deflate): tile 0 = floor,
 // tile 1 = wall. The map is a pillar-grid dungeon generated at build time.
@@ -39,7 +39,7 @@ build_map :: proc() {
 }
 
 setup :: proc(p: ^gt.Program) {
-	gt.blob_file(p, "tiles", "examples/tilemap/tiles.gtg.deflate")
+	gt.blob(p, "tiles", #load("../tilemap/tiles.gtg.deflate"))
 	gt.inflate_asset(p, "tiles")
 	build_map()
 	gt.blob(p, "map", scroll_map[:])
